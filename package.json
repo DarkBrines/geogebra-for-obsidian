@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "geogebra-for-obsidian",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "A plugin that let you create GeoGebra files in your vault using the online graph calculator interface locally.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
