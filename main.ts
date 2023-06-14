@@ -1,5 +1,6 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { GeoGebraView, GEOGEBRA_VIEW_TYPE } from "./gview";
+import { App, Plugin, PluginSettingTab, Setting } from 'obsidian'
+import { GeoGebraView, GEOGEBRA_VIEW_TYPE } from "./gview"
+import { GeoGebraServer } from './ggbserver'
 
 // Remember to rename these classes and interfaces!
 
@@ -16,16 +17,20 @@ const DEFAULT_SETTINGS: GeoGebraSettings = {
 }
 
 export default class MyPlugin extends Plugin {
-	settings: GeoGebraSettings;
+	settings: GeoGebraSettings
+	ggbServer: GeoGebraServer
 
 	async onload() {
-		await this.loadSettings();
-		this.addSettingTab(new GeoGebraSettingTab(this.app, this));
+		await this.loadSettings()
+		this.addSettingTab(new GeoGebraSettingTab(this.app, this))
+
+		this.ggbServer = new GeoGebraServer()
+		this.ggbServer.start()
 
 		this.registerView(
 			GEOGEBRA_VIEW_TYPE,
-			(leaf) => new GeoGebraView(leaf)
-		);
+			(leaf) => new GeoGebraView(leaf, `http://localhost:${this.ggbServer.port}/holder.html`)
+		)
 
 		this.registerExtensions(["ggb"], GEOGEBRA_VIEW_TYPE)
 	}
@@ -35,28 +40,28 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(this.settings)
 	}
 }
 
 class GeoGebraSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: MyPlugin
 
 	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
+		super(app, plugin)
+		this.plugin = plugin
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this
 
-		containerEl.empty();
+		containerEl.empty()
 
-		containerEl.createEl('h2', {text: 'Defaults'});
+		containerEl.createEl('h2', { text: 'Defaults' })
 
 		new Setting(containerEl)
 			.setName("Applet")
