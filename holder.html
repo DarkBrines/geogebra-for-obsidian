@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .ggbcontainer {
+            height: 100%;
+            width: 100%;
+
+            margin: 0;
+            padding: 0;
+
+            overflow: hidden;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body id="ggbcontainer">
+    <script src="GeoGebra/deployggb.js"></script>
+    <script>
+        window.onmessage = function (ev) {
+            if (!ev.data || typeof ev.data != "string" || ev.data.length < 5) return;
+
+            switch (ev.data.substring(0, 5)) {
+                case "file:":
+                    mainApplet.setBase64(ev.data.substring(5))
+                    break;
+
+                default:
+                    console.warn("Received invalid message")
+                    break;
+            }
+        }
+
+        var params = {
+            "id": "mainApplet",
+            "appName": "graphing",
+            "width": window.innerWidth,
+            "height": window.innerHeight,
+            "showToolBar": true,
+            "showAlgebraInput": true,
+            "showMenuBar": true,
+            "appletOnLoad": (_api) => {
+                window.top.postMessage("redy:", "*");
+            }
+        };
+        var applet = new GGBApplet(params, true);
+        applet.setHTML5Codebase('GeoGebra/HTML5/5.0/web3d/');
+
+        window.addEventListener("load", function () {
+            applet.inject('ggbcontainer');
+        });
+
+        window.addEventListener("resize", function () {
+            window.mainApplet.setSize(window.innerWidth, window.innerHeight);
+        })
+    </script>
+</body>
+
+</html>

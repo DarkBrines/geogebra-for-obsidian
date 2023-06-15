@@ -6,7 +6,7 @@ function randomPort(): number {
     return Math.floor(Math.random() * 200) + 11500
 }
 
-let AUTHORIZED_IPS = ["::1", "127.0.0.1", "::ffff:127.0.0.1"]
+const AUTHORIZED_IPS = ["::1", "127.0.0.1", "::ffff:127.0.0.1"]
 
 export class GeoGebraServer {
     serverInstance: http.Server
@@ -16,13 +16,12 @@ export class GeoGebraServer {
         this.port = port ? port : randomPort()
 
         this.serverInstance = http.createServer((req, res) => {
-            console.log(req.socket.remoteAddress);
             if (!req.socket.remoteAddress || !AUTHORIZED_IPS.includes(req.socket.remoteAddress)) {
                 res.writeHead(401);
                 res.end();
             }
 
-            const filePath = app.vault.adapter.getFullPath(path.join(".geogebra", req.url || "index.html"))
+            const filePath = app.vault.adapter.getFullPath(path.join(".obsidian/plugins/geogebra-for-obsidian/", req.url || "index.html"))
             const fileExtension = path.extname(filePath);
             const contentType = getContentType(fileExtension);
 

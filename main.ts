@@ -16,7 +16,7 @@ const DEFAULT_SETTINGS: GeoGebraSettings = {
 	}
 }
 
-export default class MyPlugin extends Plugin {
+export default class GeoGebraPlugin extends Plugin {
 	settings: GeoGebraSettings
 	ggbServer: GeoGebraServer
 
@@ -49,9 +49,9 @@ export default class MyPlugin extends Plugin {
 }
 
 class GeoGebraSettingTab extends PluginSettingTab {
-	plugin: MyPlugin
+	plugin: GeoGebraPlugin
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: GeoGebraPlugin) {
 		super(app, plugin)
 		this.plugin = plugin
 	}

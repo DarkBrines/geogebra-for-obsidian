@@ -1,3 +1,4 @@
+import GeoGebraPlugin from "main"
 import { FileView, TFile, WorkspaceLeaf } from "obsidian"
 
 export const GEOGEBRA_VIEW_TYPE = "geogebra-view"
@@ -5,6 +6,7 @@ export const GEOGEBRA_VIEW_TYPE = "geogebra-view"
 export class GeoGebraView extends FileView {
   title: string
   url: string
+  frame: HTMLIFrameElement
 
   constructor(leaf: WorkspaceLeaf, url: string) {
     super(leaf)
@@ -19,21 +21,50 @@ export class GeoGebraView extends FileView {
     return this.title
   }
 
+  transferFile() {
+    this.file.vault.readBinary(this.file).then(content => {
+      if (!content) return
+      let encoded = Buffer.from(content).toString("base64")
+
+      this.frame.contentWindow?.postMessage("file:" + encoded, "*")
+    })
+  }
+
   async onLoadFile(file: TFile) {
     this.title = file.basename
+
+    let frame: HTMLIFrameElement = document.createElement("iframe")
+    frame.src = this.url
+    frame.style.height = "100%"
+    frame.style.width = "100%"
+    this.contentEl.appendChild(frame)
+
+    this.frame = frame
+  }
+
+  async onUnloadFile(file: TFile) {
+    this.contentEl.firstChild?.remove()
   }
 
   async onOpen() {
     document.querySelector("div.status-bar")?.addClass("hidden-status-bar")
 
+    this.registerDomEvent(window, "message", ev => {
+      console.log(ev)
+      if (!ev.data || typeof ev.data != "string" || ev.data.length < 5) return;
+      switch (ev.data.substring(0, 5)) {
+        case "redy:":
+          this.transferFile()
+          break;
+
+        default:
+          console.warn("Received invalid message")
+          break;
+      }
+    })
+
     this.contentEl.style.padding = "0"
     this.contentEl.style.overflow = "hidden"
-
-    let el: HTMLIFrameElement = document.createElement("iframe")
-    el.src = this.url
-    el.style.height = "100%"
-    el.style.width = "100%"
-    this.contentEl.appendChild(el)
 
     console.log(this)
   }
