@@ -21,7 +21,9 @@ export class GeoGebraServer {
                 res.end();
             }
 
-            const filePath = app.vault.adapter.getFullPath(path.join(".obsidian/plugins/geogebra-for-obsidian/", req.url || "index.html"))
+            const url = req.url ? new URL(req.url, `http://${req.headers.host}`) : null;
+            const urlpath = url?.pathname
+            const filePath = app.vault.adapter.getFullPath(path.join(".obsidian/plugins/geogebra-for-obsidian/", urlpath || "index.html"))
             const fileExtension = path.extname(filePath);
             const contentType = getContentType(fileExtension);
 
@@ -39,7 +41,7 @@ export class GeoGebraServer {
 
     start() {
         this.serverInstance.listen(this.port, () => {
-            console.log(`Server is running on port ${this.port}`);
+            console.log(`Geogebra server is running on port ${this.port}`);
         });
 
     }

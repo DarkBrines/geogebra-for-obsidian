@@ -1,4 +1,4 @@
-import GeoGebraPlugin from "main"
+import { GeoGebraSettings } from "main"
 import { FileView, TFile, WorkspaceLeaf } from "obsidian"
 
 export const GEOGEBRA_VIEW_TYPE = "geogebra-view"
@@ -7,10 +7,12 @@ export class GeoGebraView extends FileView {
   title: string
   url: string
   frame: HTMLIFrameElement
+  settings: GeoGebraSettings
 
-  constructor(leaf: WorkspaceLeaf, url: string) {
+  constructor(leaf: WorkspaceLeaf, url: string, settings: GeoGebraSettings) {
     super(leaf)
     this.url = url
+    this.settings = settings
   }
 
   getViewType() {
@@ -19,6 +21,16 @@ export class GeoGebraView extends FileView {
 
   getDisplayText() {
     return this.title
+  }
+
+  getIcon(): string {
+    return "line-chart"
+  }
+
+  transferConfig() {
+    this.frame.contentWindow?.postMessage("cfig:" + [
+      this.settings.applet
+    ].join(";"), "*")
   }
 
   transferFile() {
@@ -31,7 +43,14 @@ export class GeoGebraView extends FileView {
   }
 
   async onLoadFile(file: TFile) {
-    this.title = file.basename
+    const uFilename = file.name.split(".")
+    this.title = uFilename[0]
+
+    if (file.extension == "ggb" && ["graphing", "geometry", "3d", "classic", "suite", "evaluator", "scientific"].includes(uFilename[1])) {
+      this.settings.applet = uFilename[1]
+    } else if (file.extension == "ggs") {
+      this.settings.applet = "notes"
+    }
 
     let frame: HTMLIFrameElement = document.createElement("iframe")
     frame.src = this.url
@@ -40,20 +59,24 @@ export class GeoGebraView extends FileView {
     this.contentEl.appendChild(frame)
 
     this.frame = frame
+
+    console.log("onLoadFile fired")
   }
 
   async onUnloadFile(file: TFile) {
     this.contentEl.firstChild?.remove()
+    console.log("onUnloadFile fired")
   }
 
   async onOpen() {
-    document.querySelector("div.status-bar")?.addClass("hidden-status-bar")
-
     this.registerDomEvent(window, "message", ev => {
-      console.log(ev)
       if (!ev.data || typeof ev.data != "string" || ev.data.length < 5) return;
       switch (ev.data.substring(0, 5)) {
-        case "redy:":
+        case "redy:": //Ready
+          this.transferConfig()
+          break;
+
+        case "frqt:": //File request
           this.transferFile()
           break;
 
@@ -70,6 +93,6 @@ export class GeoGebraView extends FileView {
   }
 
   async onClose() {
-    document.querySelector("div.status-bar")?.removeClass("hidden-status-bar")
+    console.log("onClose fired")
   }
 }

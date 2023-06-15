@@ -27,12 +27,38 @@
 </head>
 
 <body id="ggbcontainer">
+    <h1>Loading...</h1>
+
     <script src="GeoGebra/deployggb.js"></script>
     <script>
-        window.onmessage = function (ev) {
+        let params = {
+            "id": "mainApplet",
+            "appName": "graphing",
+            "width": window.innerWidth,
+            "height": window.innerHeight,
+            "showToolBar": true,
+            "showAlgebraInput": true,
+            "showMenuBar": true,
+            "enableFileFeatures": false,
+            "appletOnLoad": (_api) => {
+                window.top.postMessage("frqt:", '*')
+            }
+        };
+
+        window.addEventListener("message", ev => {
             if (!ev.data || typeof ev.data != "string" || ev.data.length < 5) return;
 
             switch (ev.data.substring(0, 5)) {
+                case "cfig:":
+                    const [APPLET] = ev.data.substring(5).split(";")
+                    params.appName = APPLET
+
+                    var applet = new GGBApplet(params, true);
+                    applet.setHTML5Codebase('GeoGebra/HTML5/5.0/web3d/');
+
+                    applet.inject('ggbcontainer');
+                    break;
+
                 case "file:":
                     mainApplet.setBase64(ev.data.substring(5))
                     break;
@@ -41,30 +67,13 @@
                     console.warn("Received invalid message")
                     break;
             }
-        }
-
-        var params = {
-            "id": "mainApplet",
-            "appName": "graphing",
-            "width": window.innerWidth,
-            "height": window.innerHeight,
-            "showToolBar": true,
-            "showAlgebraInput": true,
-            "showMenuBar": true,
-            "appletOnLoad": (_api) => {
-                window.top.postMessage("redy:", "*");
-            }
-        };
-        var applet = new GGBApplet(params, true);
-        applet.setHTML5Codebase('GeoGebra/HTML5/5.0/web3d/');
-
-        window.addEventListener("load", function () {
-            applet.inject('ggbcontainer');
-        });
+        })
 
         window.addEventListener("resize", function () {
             window.mainApplet.setSize(window.innerWidth, window.innerHeight);
         })
+
+        window.top.postMessage("redy:", "*");
     </script>
 </body>
 

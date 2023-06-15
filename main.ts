@@ -4,16 +4,14 @@ import { GeoGebraServer } from './ggbserver'
 
 // Remember to rename these classes and interfaces!
 
-interface GeoGebraSettings {
-	defaults: {
-		applet: string
-	}
+export interface GeoGebraSettings {
+	applet: string,
+	offline: boolean
 }
 
 const DEFAULT_SETTINGS: GeoGebraSettings = {
-	defaults: {
-		applet: "graphing"
-	}
+	applet: "graphing",
+	offline: false
 }
 
 export default class GeoGebraPlugin extends Plugin {
@@ -29,10 +27,10 @@ export default class GeoGebraPlugin extends Plugin {
 
 		this.registerView(
 			GEOGEBRA_VIEW_TYPE,
-			(leaf) => new GeoGebraView(leaf, `http://localhost:${this.ggbServer.port}/holder.html`)
+			(leaf) => new GeoGebraView(leaf, `http://localhost:${this.ggbServer.port}/holder.html`, this.settings)
 		)
 
-		this.registerExtensions(["ggb"], GEOGEBRA_VIEW_TYPE)
+		this.registerExtensions(["ggb", "ggs"], GEOGEBRA_VIEW_TYPE)
 	}
 
 	onunload() {
@@ -70,14 +68,30 @@ class GeoGebraSettingTab extends PluginSettingTab {
 				.addOptions({
 					"graphing": "Graphical Calculator",
 					"geometry": "Geometry",
-					"3D": "Geometry 3D",
-					"classic": "Classic"
+					"3d": "3D Graphing Calculator",
+					"classic": "Classic",
+					"suite": "Calculator Suite",
+					"evaluator": "Equation Editor",
+					"scientific": "Scientific Calculator",
+					"notes": "Notes"
 				})
 
-				.setValue(this.plugin.settings.defaults.applet)
+				.setValue(this.plugin.settings.applet)
 				.onChange(async value => {
-					this.plugin.settings.defaults.applet = value
+					this.plugin.settings.applet = value
 					await this.plugin.saveSettings()
 				}))
+
+		containerEl.createEl('h2', { text: 'Geogebra origin' })
+		new Setting(containerEl)
+			.setName("Offline mode")
+			.setDesc("If on, Geogebra webkit will be downloaded in your vault instead of reached online everytime you open GeoGebra.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.offline)
+				.onChange(async value => {
+					this.plugin.settings.offline = value
+					await this.plugin.saveSettings()
+				}))
+
 	}
 }
